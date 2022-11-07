@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Data.Entity;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web.Mvc;
 using ProfileSample.DAL;
 using ProfileSample.Models;
@@ -9,36 +11,22 @@ namespace ProfileSample.Controllers
 {
     public class HomeController : Controller
     {
-        public ActionResult Index()
+        public async Task<ActionResult> Index()
         {
             var context = new ProfileSampleEntities();
 
-            var sources = context.ImgSources.Take(20).Select(x => x.Id);
-
-            var model = new List<ImageModel>();
-
-            foreach (var id in sources)
-            {
-                var item = context.ImgSources.Find(id);
-
-                var obj = new ImageModel()
-                {
-                    Name = item.Name,
-                    Data = item.Data
-                };
-
-                model.Add(obj);
-            }
+            var model = await context.ImgSources.Take(20).Select(x => new ImageModel() { Name = x.Name, Data=x.Data}).ToListAsync();
 
             return View(model);
         }
 
-        public ActionResult Convert()
+        public async Task<ActionResult> Convert()
         {
             var files = Directory.GetFiles(Server.MapPath("~/Content/Img"), "*.jpg");
 
             using (var context = new ProfileSampleEntities())
             {
+                var addedImages = new List<ImgSource>();
                 foreach (var file in files)
                 {
                     using (var stream = new FileStream(file, FileMode.Open))
@@ -53,10 +41,11 @@ namespace ProfileSample.Controllers
                             Data = buff,
                         };
 
-                        context.ImgSources.Add(entity);
-                        context.SaveChanges();
+                        addedImages.Add(entity);
                     }
                 }
+                context.ImgSources.AddRange(addedImages);
+                await context.SaveChangesAsync();
             }
 
             return RedirectToAction("Index");

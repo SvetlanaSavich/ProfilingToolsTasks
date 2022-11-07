@@ -25,9 +25,12 @@ namespace GameOfLife
 
         private void StartAd()
         {
-            
             {
-                adWindow = new AdWindow[2];
+                if (adWindow == null)
+                {
+                    adWindow = new AdWindow[2];
+                }
+
                 for (int i = 0; i < 2; i++)
                 {
                     if (adWindow[i] == null)
@@ -39,8 +42,6 @@ namespace GameOfLife
                         adWindow[i].Show();
                     }
                 }
-                
-                
             }
         }
 
@@ -49,6 +50,7 @@ namespace GameOfLife
             for (int i = 0; i < 2; i++)
             {
                 adWindow[i].Closed -= AdWindowOnClosed;
+                adWindow[i].Close();
                 adWindow[i] = null;
             }
             
